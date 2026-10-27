@@ -1,15 +1,7 @@
 """
-High-Throughput LLM Serving Lab: God-Tier Cyber Serving Studio
-=============================================================
-A world-class, premium developer platform for LLM serving:
-  1. 🌌 Futuristic Cyberpunk Glassmorphic Design with Neon Glow & Dynamic Micro-interactions
-  2. 🏎️ Cyberpunk HUD Speedometer Gauge with Digital Telemetry Readouts
-  3. 🔊 Pure WebAudio Synth Engine (Optional Cyber Click / Typewriter Sound FX)
-  4. 🧠 Interactive PagedAttention Real-Time Memory Growth Simulation
-  5. 🎭 System Persona & Prompt Engineering Studio
-  6. 📋 1-Click Copy, Download, Word Count, and Latency Inspector
-  7. ⚔️ Concurrency Battle Arena with Live Racing Tiles
-  8. ⚖️ Quantization Calculator, ROI Matrix & Dynamic Badges
+High-Throughput LLM Serving Studio
+Interactive Streamlit dashboard for LLM benchmarking, continuous batching analysis,
+memory visualization, and latency telemetry.
 """
 
 import asyncio
@@ -31,9 +23,6 @@ RESULTS_FILE = "serving_results.csv"
 SERVER_LOG = "server_baseline.log"
 SERVER_PID_FILE = "server.pid"
 
-# -----------------------------------------------------------------------------
-# 1. Page Configuration & Next-Gen Cyber Glassmorphism Theme
-# -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="NeuralServe OS | Next-Gen LLM Lab",
     page_icon="⚡",
@@ -41,7 +30,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Ultra-Premium Futuristic Cyberpunk CSS
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -308,7 +296,6 @@ st.markdown("""
         color: #94a3b8;
     }
     
-    /* ELIMINATE STREAMLIT DEFAULT RED ACCENTS & APPLY MODERN PALETTE */
     div[data-baseweb="tab-highlight"] {
         background-color: #38bdf8 !important;
         background: linear-gradient(90deg, #38bdf8, #818cf8) !important;
@@ -437,9 +424,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# -----------------------------------------------------------------------------
-# 2. Hardware & Process Management Utilities
-# -----------------------------------------------------------------------------
 def get_live_gpu_stats():
     """Fetch live GPU memory, utilization, temperature, and device name."""
     try:
@@ -562,9 +546,6 @@ def render_speedometer_svg(speed_tps: float, max_scale: float = 60.0):
     return svg
 
 
-# -----------------------------------------------------------------------------
-# 3. Sidebar: Server Control & Hardware HUD
-# -----------------------------------------------------------------------------
 st.sidebar.markdown("### ⚡ Server & Node Controls")
 raw_url = st.sidebar.text_input("Serving Endpoint", value="http://127.0.0.1:8000")
 server_url = raw_url.replace("localhost", "127.0.0.1")
@@ -577,7 +558,6 @@ if is_online:
 else:
     st.sidebar.error("🔴 **OFFLINE** — Server not reached")
 
-# Model Catalog Selector
 st.sidebar.markdown("### 🔀 Model Catalog Selector")
 model_catalog = {
     "Qwen2.5-0.5B-Instruct (Default, ~1.0 GB)": "Qwen/Qwen2.5-0.5B-Instruct",
@@ -602,7 +582,6 @@ with col_srv2:
         time.sleep(1)
         st.rerun()
 
-# Sound FX Toggle
 st.sidebar.markdown("### 🔊 Sound & Haptics")
 enable_sound = st.sidebar.checkbox("Cyber Typewriter Audio FX", value=False)
 if enable_sound:
@@ -636,7 +615,6 @@ if os.path.exists(SERVER_LOG):
 
 st.sidebar.divider()
 
-# Live GPU HUD
 gpu_stats = get_live_gpu_stats()
 st.sidebar.markdown("### 🖥️ Hardware Telemetry")
 if gpu_stats["ok"]:
@@ -647,9 +625,6 @@ if gpu_stats["ok"]:
 else:
     st.sidebar.info("NVIDIA GPU stats not available via nvidia-smi.")
 
-# -----------------------------------------------------------------------------
-# 4. Top Header & Hardware HUD
-# -----------------------------------------------------------------------------
 st.markdown("""
 <div class="cyber-header">
     <div>
@@ -690,9 +665,6 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
-# -----------------------------------------------------------------------------
-# 5. Core Studio: 4 Powerhouse Workspaces
-# -----------------------------------------------------------------------------
 hub_playground, hub_arena, hub_arch, hub_analytics = st.tabs([
     "🚀 Live Prompt Studio",
     "⚔️ Arena & Concurrency Race",
@@ -700,12 +672,7 @@ hub_playground, hub_arena, hub_arch, hub_analytics = st.tabs([
     "📊 Benchmarks & Financial ROI"
 ])
 
-
-# =============================================================================
-# HUB 1: LIVE PROMPT & CHAT STUDIO
-# =============================================================================
 with hub_playground:
-    # Sleek Unified Toolbar Row
     toolbar_col1, toolbar_col2, toolbar_col3 = st.columns([1.6, 1.4, 0.9], vertical_alignment="center")
     with toolbar_col1:
         st.markdown("<div style='font-size:11px; font-weight:700; color:#64748b; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:5px;'>🖥️ UI VIEW MODE</div>", unsafe_allow_html=True)
@@ -775,7 +742,6 @@ with hub_playground:
     with col_run_btn:
         btn_stream = st.button("⚡ Execute & Stream", type="primary", use_container_width=True)
 
-    # Telemetry and Speedometer Row
     speed_col, stat1_col, stat2_col, stat3_col, stat4_col = st.columns([1.2, 1, 1, 1, 1])
     gauge_placeholder = speed_col.empty()
     gauge_placeholder.markdown(render_speedometer_svg(0.0), unsafe_allow_html=True)
@@ -846,7 +812,6 @@ with hub_playground:
             token_timings = []
             prev_token_time = t0
 
-            # Prepend system prompt if customized
             full_prompt = f"{custom_system_prompt}\n\nUser: {user_prompt}\nAssistant:" if custom_system_prompt else user_prompt
 
             req_body = {
@@ -924,7 +889,6 @@ with hub_playground:
                 else:
                     display_output = generated_text.replace("<", "&lt;").replace(">", "&gt;")
 
-                # Output formatting
                 word_count = len(generated_text.split())
                 char_count = len(generated_text)
                 read_sec = max(1, int(word_count / 3))
@@ -961,7 +925,6 @@ with hub_playground:
             except Exception as ex:
                 st.error(f"Generation error: {ex}")
 
-    # Actions: Copy / Download response
     if st.session_state.last_generated_text:
         col_act1, col_act2, col_act3 = st.columns([1, 1, 3])
         with col_act1:
@@ -973,9 +936,6 @@ with hub_playground:
                 st.rerun()
 
 
-# =============================================================================
-# HUB 2: ARENA BATTLE & CONCURRENCY RACE
-# =============================================================================
 with hub_arena:
     st.header("⚔️ Concurrency Battle & Live Engine Arena")
     
@@ -1151,9 +1111,6 @@ with hub_arena:
                 st.success(f"🏆 **Winner: vLLM** finished in **{vllm_tot:.2f}s** vs Baseline **{base_tot:.2f}s** ({speedup:.1f}x Throughput advantage)!")
 
 
-# =============================================================================
-# HUB 3: DEEP ARCHITECTURE LAB (PAGEDATTENTION + QUANTIZATION SIMULATOR)
-# =============================================================================
 with hub_arch:
     st.header("🧠 Deep Architecture & Memory Systems Lab")
 
@@ -1265,9 +1222,6 @@ with hub_arch:
         st.bar_chart(chart_data)
 
 
-# =============================================================================
-# HUB 4: BENCHMARKS, ANALYTICS, FINANCIAL ROI & BADGES
-# =============================================================================
 with hub_analytics:
     st.header("📊 Benchmarks, Analytics & Financial ROI")
 
