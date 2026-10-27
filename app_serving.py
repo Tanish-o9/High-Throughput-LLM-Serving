@@ -906,8 +906,6 @@ with hub_playground:
                             {generated_text}▌
                         </div>
                         ''', unsafe_allow_html=True)
-            except Exception as ex:
-                st.error(f"Inference error: {ex}")
 
                 total_duration = time.perf_counter() - t0
                 tok_per_sec = (tokens_count / total_duration) if total_duration > 0 and tokens_count > 0 else 0
@@ -925,7 +923,6 @@ with hub_playground:
 
                 word_count = len(generated_text.split())
                 char_count = len(generated_text)
-                read_sec = max(1, int(word_count / 3))
 
                 if view_mode == "💻 Cyber Terminal Mode":
                     terminal_screen_area.markdown(f"""
@@ -936,7 +933,6 @@ with hub_playground:
                             <br><br>
                             <span style="color:#10b981; font-size:12px;">[COMPLETED in {total_duration:.2f}s | TTFT: {(ttft*1000) if ttft else 0:.0f}ms | Speed: {tok_per_sec:.1f} tok/s | Words: {word_count} | Chars: {char_count}]</span>
                         </div>
-                    </div>
                     """, unsafe_allow_html=True)
                 else:
                     st.session_state.chat_history.append({
