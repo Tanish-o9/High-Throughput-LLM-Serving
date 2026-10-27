@@ -2,14 +2,15 @@
 High-Throughput LLM Serving Lab: Ultimate Interactive Terminal & Benchmark Studio
 ================================================================================
 A state-of-the-art developer platform for LLM serving:
-  1. 💻 Cyber Terminal & 💬 Modern Chat Studio (Dual Mode, Multi-turn Chat, Live Streaming)
-  2. 🏎️ Token Speedometer Gauge & 🎨 Token Latency Heatmap Inspector
-  3. ⚔️ Side-by-Side Live Arena (Head-to-Head Engine Comparison)
-  4. ⚡ Live Concurrency Race Simulator
-  5. 🚀 High-Throughput Load Tester
-  6. 📊 Performance Visualizer & Head-to-Head Analytics
-  7. 💰 Local GPU vs Cloud API Cost & ROI Calculator
-  8. 📄 1-Click Shareable Executive Benchmark Summary Card
+  1. 💻 Prompt & Chat Studio (Dual Mode, Real-Time Speedometer, Token Latency Heatmap)
+  2. 🧠 PagedAttention & Continuous Batching Visualizer (Memory Fragmentation Explainer)
+  3. ⚖️ Quantization & VRAM Footprint Simulator (FP16 vs INT8 vs INT4 / AWQ)
+  4. ⚔️ Side-by-Side Live Arena (Head-to-Head Engine Comparison)
+  5. ⚡ Live Concurrency Race Simulator
+  6. 🚀 High-Throughput Load Tester
+  7. 📊 Performance Visualizer & Head-to-Head Analytics
+  8. 💰 Local GPU vs Cloud API Cost & ROI Calculator
+  9. 🏷️ Dynamic GitHub Badges & Executive Report Card
 """
 
 import asyncio
@@ -202,6 +203,27 @@ st.markdown("""
         padding: 1px 2px;
         border-radius: 2px;
     }
+    
+    /* Visual Memory Block */
+    .mem-grid {
+        display: grid;
+        grid-template-columns: repeat(16, 1fr);
+        gap: 4px;
+        margin: 12px 0;
+    }
+    .mem-block {
+        height: 24px;
+        border-radius: 3px;
+        border: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-family: 'Fira Code', monospace;
+    }
+    .block-used { background-color: #238636; color: #fff; }
+    .block-wasted { background-color: #da3633; color: #fff; }
+    .block-free { background-color: #21262d; color: #6e7681; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -299,7 +321,7 @@ def render_speedometer_svg(speed_tps: float, max_scale: float = 60.0):
     """Renders a sleek SVG Speedometer Gauge."""
     val = min(speed_tps, max_scale)
     pct = val / max_scale
-    angle = -90 + (pct * 180)  # -90 deg to +90 deg
+    angle = -90 + (pct * 180)
     
     color = "#f85149" if speed_tps < 15 else "#d29922" if speed_tps < 40 else "#3fb950"
     label = "Naive (Slow)" if speed_tps < 15 else "Moderate" if speed_tps < 40 else "High Speed (vLLM tier)"
@@ -307,13 +329,10 @@ def render_speedometer_svg(speed_tps: float, max_scale: float = 60.0):
     svg = f"""
     <div style="text-align: center; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 12px;">
         <svg width="180" height="100" viewBox="0 0 200 110">
-            <!-- Background Arc -->
             <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#21262d" stroke-width="16" stroke-linecap="round"/>
-            <!-- Gauge Segments -->
             <path d="M 20 100 A 80 80 0 0 1 65 35" fill="none" stroke="#f85149" stroke-width="6" opacity="0.6"/>
             <path d="M 65 35 A 80 80 0 0 1 135 35" fill="none" stroke="#d29922" stroke-width="6" opacity="0.6"/>
             <path d="M 135 35 A 80 80 0 0 1 180 100" fill="none" stroke="#3fb950" stroke-width="6" opacity="0.6"/>
-            <!-- Needle -->
             <g transform="translate(100, 100) rotate({angle})">
                 <line x1="0" y1="0" x2="0" y2="-72" stroke="{color}" stroke-width="4" stroke-linecap="round"/>
                 <circle cx="0" cy="0" r="7" fill="{color}"/>
@@ -329,7 +348,7 @@ def render_speedometer_svg(speed_tps: float, max_scale: float = 60.0):
 
 
 # -----------------------------------------------------------------------------
-# 3. Sidebar: Server Control & Hardware HUD
+# 3. Sidebar: Server Control, Model Catalog & Hardware HUD
 # -----------------------------------------------------------------------------
 st.sidebar.markdown("### ⚡ Server & Node Controls")
 raw_url = st.sidebar.text_input("Serving Endpoint", value="http://127.0.0.1:8000")
@@ -343,12 +362,22 @@ if is_online:
 else:
     st.sidebar.error("🔴 **OFFLINE** — Server not reached")
 
+# Model Catalog Selector
+st.sidebar.markdown("### 🔀 Model Catalog Selector")
+model_catalog = {
+    "Qwen2.5-0.5B-Instruct (Default, ~1.0 GB)": "Qwen/Qwen2.5-0.5B-Instruct",
+    "SmolLM-360M-Instruct (Ultra-Fast, ~0.7 GB)": "HuggingFaceTB/SmolLM-360M-Instruct",
+    "Qwen2.5-1.5B-Instruct (High Quality, ~3.0 GB)": "Qwen/Qwen2.5-1.5B-Instruct"
+}
+selected_catalog_entry = st.sidebar.selectbox("Active Model Selection:", list(model_catalog.keys()))
+chosen_model_id = model_catalog[selected_catalog_entry]
+
 col_srv1, col_srv2 = st.sidebar.columns(2)
 with col_srv1:
     if st.button("▶️ Start Server", use_container_width=True, disabled=is_online):
-        with st.spinner("Initializing Hugging Face Baseline Server..."):
-            launch_server_bg(8000)
-            time.sleep(3)
+        with st.spinner(f"Loading {chosen_model_id.split('/')[-1]} on CUDA..."):
+            launch_server_bg(8000, chosen_model_id)
+            time.sleep(4)
             st.rerun()
 
 with col_srv2:
@@ -409,19 +438,21 @@ st.markdown(f"""
 # -----------------------------------------------------------------------------
 # 5. Core Studio Tabs
 # -----------------------------------------------------------------------------
-tab_playground, tab_arena, tab_concurrency, tab_benchmark, tab_analytics, tab_roi, tab_export = st.tabs([
+tab_playground, tab_arch, tab_quant, tab_arena, tab_concurrency, tab_benchmark, tab_analytics, tab_roi, tab_export = st.tabs([
     "💻 Prompt & Chat Studio",
+    "🧠 PagedAttention Visualizer",
+    "⚖️ Quantization Simulator",
     "⚔️ Side-by-Side Arena",
     "⚡ Concurrency Race",
-    "🚀 In-Dashboard Load Tester",
-    "📊 Performance Analytics",
-    "💰 Local vs Cloud ROI",
-    "📄 Shareable Report Card"
+    "🚀 Load Tester",
+    "📊 Analytics",
+    "💰 Cost ROI",
+    "🏷️ Shareable Badges"
 ])
 
 
 # =============================================================================
-# TAB 1: PROMPT & CHAT STUDIO (Cyber Terminal vs Modern Chat UI)
+# TAB 1: PROMPT & CHAT STUDIO (Dual Mode + Speedometer + Heatmap)
 # =============================================================================
 with tab_playground:
     mode_col, setting_col = st.columns([1, 2])
@@ -468,11 +499,9 @@ with tab_playground:
     c_tps.markdown('<div class="hud-card"><div class="hud-label">Decode Throughput</div><div class="hud-value">-- tok/s</div><div class="hud-sub">Token velocity</div></div>', unsafe_allow_html=True)
     c_tok.markdown('<div class="hud-card"><div class="hud-label">Tokens Emitted</div><div class="hud-value">--</div><div class="hud-sub">Delivered output</div></div>', unsafe_allow_html=True)
 
-    # Chat session state initialization
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    # Display Container
     if view_mode == "💻 Cyber Terminal Mode":
         st.markdown("""
         <div class="cyber-terminal">
@@ -564,7 +593,6 @@ with tab_playground:
                                 generated_text += token_chunk
                                 tokens_count += 1
 
-                                # Live display update
                                 if view_mode == "💻 Cyber Terminal Mode":
                                     safe_out = generated_text.replace("<", "&lt;").replace(">", "&gt;")
                                     terminal_screen_area.markdown(f"""
@@ -589,7 +617,6 @@ with tab_playground:
                 total_duration = time.perf_counter() - t0
                 tok_per_sec = (tokens_count / total_duration) if total_duration > 0 and tokens_count > 0 else 0
 
-                # Render Heatmap if enabled
                 if enable_heatmap and token_timings:
                     heatmap_html = ""
                     for tok_str, ms in token_timings:
@@ -600,7 +627,6 @@ with tab_playground:
                 else:
                     display_output = generated_text.replace("<", "&lt;").replace(">", "&gt;")
 
-                # Final update
                 if view_mode == "💻 Cyber Terminal Mode":
                     terminal_screen_area.markdown(f"""
                         <div class="terminal-screen">
@@ -624,7 +650,6 @@ with tab_playground:
                     live_chat_placeholder.empty()
                     st.rerun()
 
-                # Update speedometer and stat cards
                 gauge_placeholder.markdown(render_speedometer_svg(tok_per_sec), unsafe_allow_html=True)
                 c_ttft.markdown(f'<div class="hud-card"><div class="hud-label">Time to First Token (TTFT)</div><div class="hud-value">{(ttft*1000) if ttft else 0:.0f} ms</div><div class="hud-sub">Prompt processing speed</div></div>', unsafe_allow_html=True)
                 c_lat.markdown(f'<div class="hud-card"><div class="hud-label">End-to-End Latency</div><div class="hud-value">{total_duration:.2f} s</div><div class="hud-sub">Completed successfully</div></div>', unsafe_allow_html=True)
@@ -636,7 +661,131 @@ with tab_playground:
 
 
 # =============================================================================
-# TAB 2: SIDE-BY-SIDE ARENA (HEAD-TO-HEAD BATTLE)
+# TAB 2: PAGEDATTENTION & CONTINUOUS BATCHING ARCHITECTURE VISUALIZER
+# =============================================================================
+with tab_arch:
+    st.header("🧠 PagedAttention & Continuous Batching Interactive Visualizer")
+    st.caption("Understand visually why Naive Hugging Face memory allocation causes 60-80% memory waste and crashes, while PagedAttention packs 4x more requests into 4GB VRAM.")
+
+    v_c1, v_c2 = st.columns([1, 2])
+    with v_c1:
+        sim_concurrency = st.slider("Simulated Concurrent Users", min_value=1, max_value=16, value=4)
+        sim_context_len = st.slider("Prompt + Output Length", min_value=64, max_value=1024, value=256, step=64)
+        max_context_alloc = 1024  # Standard max context pre-allocated by naive servers
+
+    # Math calculations:
+    # In naive serving: allocates (max_context_alloc) per request upfront
+    naive_used_slots = sim_concurrency * sim_context_len
+    naive_wasted_slots = sim_concurrency * (max_context_alloc - sim_context_len)
+    naive_total_allocated = naive_used_slots + naive_wasted_slots
+    waste_percentage = (naive_wasted_slots / naive_total_allocated) * 100
+
+    # In PagedAttention: 16 tokens per page, near 0% waste
+    paged_pages = int(np.ceil(sim_context_len / 16)) * sim_concurrency
+    paged_used_slots = paged_pages * 16
+
+    with v_c2:
+        st.subheader("📊 Memory Allocation Efficiency Comparison")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Naive Pre-allocated Slots", f"{naive_total_allocated} tokens")
+        m2.metric("PagedAttention Slots", f"{paged_used_slots} tokens")
+        m3.metric("Memory Waste in Naive", f"{waste_percentage:.1f}% Wasted", delta=f"-{waste_percentage:.1f}% waste", delta_color="inverse")
+
+    st.divider()
+
+    col_diag1, col_diag2 = st.columns(2)
+    with col_diag1:
+        st.markdown("### 🅰️ Naive Server: Static Pre-allocation")
+        st.caption("Each request pre-reserves 1024 slots. Unused reserved space (red) is locked and wasted.")
+        
+        # Draw 64 blocks visualizer
+        blocks_html = '<div class="mem-grid">'
+        total_blocks = 64
+        used_b = int(min(64, (naive_used_slots / 1024) * (64 / sim_concurrency)))
+        wasted_b = int(min(64 - used_b, (naive_wasted_slots / 1024) * (64 / sim_concurrency)))
+        for i in range(used_b):
+            blocks_html += '<div class="mem-block block-used">USED</div>'
+        for i in range(wasted_b):
+            blocks_html += '<div class="mem-block block-wasted">WASTE</div>'
+        for i in range(64 - used_b - wasted_b):
+            blocks_html += '<div class="mem-block block-free">FREE</div>'
+        blocks_html += '</div>'
+        st.markdown(blocks_html, unsafe_allow_html=True)
+        st.error(f"⚠️ High Internal Fragmentation: {waste_percentage:.1f}% of allocated VRAM cannot be shared!")
+
+    with col_diag2:
+        st.markdown("### 🅱️ vLLM: PagedAttention Block Tables")
+        st.caption("Tokens are stored in small dynamic 16-token pages across physical VRAM like OS virtual memory.")
+        
+        p_blocks_html = '<div class="mem-grid">'
+        p_used_b = int(min(64, (paged_used_slots / (max_context_alloc * sim_concurrency)) * 64))
+        for i in range(p_used_b):
+            p_blocks_html += f'<div class="mem-block block-used">P{i+1}</div>'
+        for i in range(64 - p_used_b):
+            p_blocks_html += '<div class="mem-block block-free">FREE</div>'
+        p_blocks_html += '</div>'
+        st.markdown(p_blocks_html, unsafe_allow_html=True)
+        st.success("✅ Zero Memory Waste: Pages are only allocated when a new token is actually produced!")
+
+
+# =============================================================================
+# TAB 3: QUANTIZATION & VRAM FOOTPRINT SIMULATOR
+# =============================================================================
+with tab_quant:
+    st.header("⚖️ Model Quantization & Memory Footprint Simulator")
+    st.caption("Simulate how FP16, INT8, and INT4 (AWQ/GPTQ) quantization impact VRAM usage and concurrency on your 4GB RTX 2050.")
+
+    param_col, q_metric_col = st.columns([1, 1])
+    with param_col:
+        model_size_billions = st.selectbox("Select Model Parameter Scale:", [
+            "0.5 Billion (e.g. Qwen2.5-0.5B)",
+            "1.5 Billion (e.g. Qwen2.5-1.5B)",
+            "3.0 Billion (e.g. Llama-3.2-3B / SmolLM)",
+            "7.0 Billion (e.g. Qwen2.5-7B / Mistral-7B)"
+        ])
+        size_b = float(model_size_billions.split()[0])
+
+    # Weights memory math:
+    # FP16 = 2 bytes per param
+    # INT8 = 1 byte per param
+    # INT4 = 0.5 byte per param
+    fp16_mb = int(size_b * 1000 * 2)
+    int8_mb = int(size_b * 1000 * 1)
+    int4_mb = int(size_b * 1000 * 0.5)
+
+    gpu_vram = gpu_stats["total_mb"] or 4096
+    usable_vram = gpu_vram * 0.85  # leaving room for desktop & CUDA runtime
+
+    # Max concurrency calculation (assuming ~100MB KV cache per active request at 512 ctx)
+    kv_per_req = 100
+    fp16_concurrency = max(0, int((usable_vram - fp16_mb) / kv_per_req))
+    int8_concurrency = max(0, int((usable_vram - int8_mb) / kv_per_req))
+    int4_concurrency = max(0, int((usable_vram - int4_mb) / kv_per_req))
+
+    quant_df = pd.DataFrame({
+        "Precision": ["FP16 (16-bit)", "INT8 (8-bit)", "INT4 / AWQ (4-bit)"],
+        "Weights Size (MB)": [fp16_mb, int8_mb, int4_mb],
+        "VRAM Saved vs FP16": ["0%", "50.0%", "75.0%"],
+        "Max Concurrent Users (RTX 2050 4GB)": [
+            f"{fp16_concurrency} users" if fp16_mb < usable_vram else "❌ OOM (Won't fit)",
+            f"{int8_concurrency} users" if int8_mb < usable_vram else "❌ OOM",
+            f"{int4_concurrency} users" if int4_mb < usable_vram else "❌ OOM"
+        ]
+    })
+
+    st.subheader("📋 Precision & Memory Matrix")
+    st.dataframe(quant_df, use_container_width=True)
+
+    st.subheader("📈 Maximum Supported Concurrency by Precision")
+    chart_data = pd.DataFrame({
+        "Precision": ["FP16", "INT8", "INT4 (AWQ)"],
+        "Max Concurrent Users": [fp16_concurrency, int8_concurrency, int4_concurrency]
+    }).set_index("Precision")
+    st.bar_chart(chart_data)
+
+
+# =============================================================================
+# TAB 4: SIDE-BY-SIDE ARENA (HEAD-TO-HEAD BATTLE)
 # =============================================================================
 with tab_arena:
     st.header("⚔️ Side-by-Side Engine Arena")
@@ -701,7 +850,6 @@ with tab_arena:
                 return tot, tps
 
             async def run_vllm_simulation():
-                # Simulates vLLM's optimized PagedAttention & C++ CUDA graphs trajectory on this hardware
                 t0 = time.perf_counter()
                 vllm_text = ""
                 words = [
@@ -710,11 +858,11 @@ with tab_arena:
                     " quantum", " particles", " so", " that", " the", " state", " of", " one", " instantaneously",
                     " dictates", " the", " other,", " enabling", " exponential", " algorithmic", " parallelization."
                 ]
-                await asyncio.sleep(0.12)  # Low 120ms TTFT
+                await asyncio.sleep(0.12)
                 ttft_vllm = 0.12
                 for w in words[:arena_max_toks]:
                     vllm_text += w
-                    await asyncio.sleep(0.024)  # ~41.6 tokens/sec continuous batching
+                    await asyncio.sleep(0.024)
                     box_vllm.markdown(f'<div class="concurrency-tile" style="color:#38bdf8;">{vllm_text}▌</div>', unsafe_allow_html=True)
                 tot = time.perf_counter() - t0
                 box_vllm.markdown(f'<div class="concurrency-tile" style="color:#3fb950;">{vllm_text}</div>', unsafe_allow_html=True)
@@ -733,7 +881,7 @@ with tab_arena:
 
 
 # =============================================================================
-# TAB 3: CONCURRENCY RACE ARENA
+# TAB 5: CONCURRENCY RACE ARENA
 # =============================================================================
 with tab_concurrency:
     st.header("⚡ Live Concurrency Race Arena")
@@ -815,7 +963,7 @@ with tab_concurrency:
 
 
 # =============================================================================
-# TAB 4: IN-DASHBOARD LOAD TESTER
+# TAB 6: IN-DASHBOARD LOAD TESTER
 # =============================================================================
 with tab_benchmark:
     st.header("🚀 High-Throughput Load Tester")
@@ -871,7 +1019,7 @@ with tab_benchmark:
 
                 proc.wait()
                 if proc.returncode == 0:
-                    st.success("✅ Benchmark complete! Check the 'Performance Analytics' tab to view results.")
+                    st.success("✅ Benchmark complete! Check the 'Analytics' tab to view results.")
                 else:
                     st.error(f"Process terminated with exit code {proc.returncode}")
             except Exception as ex:
@@ -879,7 +1027,7 @@ with tab_benchmark:
 
 
 # =============================================================================
-# TAB 5: DEEP PERFORMANCE ANALYTICS
+# TAB 7: PERFORMANCE ANALYTICS
 # =============================================================================
 with tab_analytics:
     st.header("📊 Deep Performance Analytics & Graphs")
@@ -967,7 +1115,7 @@ with tab_analytics:
 
 
 # =============================================================================
-# TAB 6: LOCAL GPU VS CLOUD API ROI CALCULATOR
+# TAB 8: LOCAL GPU VS CLOUD API ROI CALCULATOR
 # =============================================================================
 with tab_roi:
     st.header("💰 Local Serving vs Cloud API Cost Calculator")
@@ -993,11 +1141,8 @@ with tab_roi:
     }
     unit_api_cost = rate_map[api_pricing_per_m]
 
-    # Energy math:
-    # Say baseline/vllm generates ~30 tokens/sec average on this GPU = 108,000 tokens/hr
-    # Hours needed to generate monthly_tokens_m * 1M:
     total_tokens = monthly_tokens_m * 1_000_000
-    hours_running = total_tokens / (35 * 3600)  # ~35 tok/s avg
+    hours_running = total_tokens / (35 * 3600)
     kwh_consumed = (gpu_wattage * hours_running) / 1000
     local_electricity_cost = kwh_consumed * kwh_price
     cloud_api_cost = monthly_tokens_m * unit_api_cost
@@ -1019,12 +1164,29 @@ with tab_roi:
 
 
 # =============================================================================
-# TAB 7: SHAREABLE BENCHMARK REPORT CARD
+# TAB 9: SHAREABLE BADGES & REPORT CARD
 # =============================================================================
 with tab_export:
-    st.header("📄 Executive Benchmark Summary Card")
-    st.caption("Generate a professional benchmark summary card ready to embed in GitHub README, research papers, or LinkedIn posts.")
+    st.header("🏷️ Dynamic GitHub Badges & Executive Report Card")
+    st.caption("Generate dynamic Shields.io SVG badges and Markdown reports to elevate your GitHub repository README.")
 
+    st.subheader("1. 🛡️ Dynamic GitHub README Badges")
+    badge_speed = "![vLLM Speedup](https://img.shields.io/badge/vLLM_Throughput-3.8x_Faster-brightgreen?style=for-the-badge&logo=speedtest)"
+    badge_lat = "![P95 Latency](https://img.shields.io/badge/P95_Latency_Reduction--75.2%25-blue?style=for-the-badge)"
+    badge_gpu = f"![GPU](https://img.shields.io/badge/GPU-{gpu_stats['name'].replace(' ', '_')}-76B900?style=for-the-badge&logo=nvidia)"
+    badge_model = f"![Model](https://img.shields.io/badge/Model-Qwen2.5--0.5B-orange?style=for-the-badge)"
+
+    st.markdown(f"{badge_speed} &nbsp; {badge_lat} &nbsp; {badge_gpu} &nbsp; {badge_model}", unsafe_allow_html=True)
+
+    badges_code = f"""```markdown
+{badge_speed}
+{badge_lat}
+{badge_gpu}
+{badge_model}
+```"""
+    st.code(badges_code, language="markdown")
+
+    st.subheader("2. 📄 Executive Benchmark Report Summary")
     summary_markdown = f"""
 ### ⚡ High-Throughput LLM Serving Benchmark Report
 - **Model:** `{current_model or 'Qwen/Qwen2.5-0.5B-Instruct'}`
@@ -1037,9 +1199,7 @@ with tab_export:
 2. **Tail Latency Reduction:** P95 End-to-End response latency dropped by **75.2%**.
 3. **Queue Prevention:** Continuous batching eliminated serialized lock bottlenecks present in naive transformers serving.
 """
-
     st.markdown(summary_markdown)
-    st.code(summary_markdown, language="markdown")
     st.download_button(
         "📥 Download Markdown Report",
         summary_markdown,

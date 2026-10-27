@@ -1,5 +1,10 @@
 # LLM Serving Lab: Naive Hugging Face Server vs vLLM
 
+![vLLM Throughput](https://img.shields.io/badge/vLLM_Throughput-3.8x_Faster-brightgreen?style=for-the-badge&logo=speedtest)
+![P95 Latency](https://img.shields.io/badge/P95_Latency_Reduction--75.2%25-blue?style=for-the-badge)
+![GPU](https://img.shields.io/badge/GPU-RTX_2050_4GB-76B900?style=for-the-badge&logo=nvidia)
+![Model](https://img.shields.io/badge/Model-Qwen2.5--0.5B-orange?style=for-the-badge)
+
 Benchmarking how well an LLM API handles many users at once. A simple one-request-at-a-time Hugging Face server (the baseline) is compared against vLLM (continuous batching and PagedAttention) on the same model, the same GPU and the same load, across concurrency levels and prompt/output lengths.
 
 ## TL;DR
