@@ -1,0 +1,2 @@
+# Install this in a SEPARATE virtual environment (vLLM pins its own torch version).
+vllm
