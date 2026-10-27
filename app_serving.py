@@ -1,9 +1,15 @@
 """
-High-Throughput LLM Serving Lab: Ultimate Cyber Serving Studio
+High-Throughput LLM Serving Lab: God-Tier Cyber Serving Studio
 =============================================================
-A world-class, premium developer platform for LLM serving with rich glassmorphism,
-real-time telemetry HUD, radial speedometer, interactive memory visualizer,
-side-by-side arena battles, and financial ROI calculator.
+A world-class, premium developer platform for LLM serving:
+  1. 🌌 Futuristic Cyberpunk Glassmorphic Design with Neon Glow & Dynamic Micro-interactions
+  2. 🏎️ Cyberpunk HUD Speedometer Gauge with Digital Telemetry Readouts
+  3. 🔊 Pure WebAudio Synth Engine (Optional Cyber Click / Typewriter Sound FX)
+  4. 🧠 Interactive PagedAttention Real-Time Memory Growth Simulation
+  5. 🎭 System Persona & Prompt Engineering Studio
+  6. 📋 1-Click Copy, Download, Word Count, and Latency Inspector
+  7. ⚔️ Concurrency Battle Arena with Live Racing Tiles
+  8. ⚖️ Quantization Calculator, ROI Matrix & Dynamic Badges
 """
 
 import asyncio
@@ -19,65 +25,84 @@ import httpx
 import numpy as np
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 RESULTS_FILE = "serving_results.csv"
 SERVER_LOG = "server_baseline.log"
 SERVER_PID_FILE = "server.pid"
 
 # -----------------------------------------------------------------------------
-# 1. Page Configuration & Ultra-Premium Vercel / Cyber Dark Theme
+# 1. Page Configuration & Next-Gen Cyber Glassmorphism Theme
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="NeuralServe | High-Throughput LLM Studio",
+    page_title="NeuralServe OS | Next-Gen LLM Lab",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Premium Custom CSS (Glassmorphism + Neon Accents + Sleek Micro-interactions)
+# Ultra-Premium Futuristic Cyberpunk CSS
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-        color: #e2e8f0;
+        font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+        color: #f1f5f9;
     }
     
     code, pre, .terminal-text {
         font-family: 'JetBrains Mono', monospace !important;
     }
     
-    /* Sleek Top Banner */
-    .studio-header {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
-        border: 1px solid rgba(56, 189, 248, 0.2);
-        border-radius: 16px;
-        padding: 20px 24px;
+    /* Top Futuristic Header */
+    .cyber-header {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 50%, rgba(15, 23, 42, 0.95) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        border-radius: 18px;
+        padding: 22px 28px;
         margin-bottom: 24px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(12px);
+        box-shadow: 0 12px 40px -10px rgba(0, 240, 255, 0.15);
+        backdrop-filter: blur(16px);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .cyber-header::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #00f0ff, #7000ff, #ff007a, #00f0ff);
+        background-size: 300% 100%;
+        animation: cyber-gradient 6s linear infinite;
+    }
+    
+    @keyframes cyber-gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
     
     .brand-title {
-        font-size: 26px;
+        font-size: 28px;
         font-weight: 800;
-        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+        background: linear-gradient(135deg, #38bdf8 0%, #a855f7 60%, #ec4899 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.6px;
     }
     
     .brand-subtitle {
         font-size: 13px;
         color: #94a3b8;
         margin-top: 4px;
+        font-family: 'JetBrains Mono', monospace;
     }
     
-    /* Hardware HUD Cards */
+    /* Hardware HUD Grid */
     .hud-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -86,22 +111,24 @@ st.markdown("""
     }
     
     .hud-card {
-        background: rgba(15, 23, 42, 0.7);
+        background: rgba(15, 23, 42, 0.75);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 14px;
         padding: 16px 20px;
         position: relative;
         overflow: hidden;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(8px);
     }
     
     .hud-card:hover {
-        border-color: rgba(56, 189, 248, 0.3);
-        transform: translateY(-2px);
+        border-color: rgba(56, 189, 248, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(56, 189, 248, 0.15);
     }
     
-    .hud-card::before {
+    .hud-card::after {
         content: "";
         position: absolute;
         top: 0; left: 0; right: 0;
@@ -114,7 +141,7 @@ st.markdown("""
         font-weight: 700;
         color: #94a3b8;
         text-transform: uppercase;
-        letter-spacing: 0.9px;
+        letter-spacing: 1px;
     }
     
     .hud-value {
@@ -129,15 +156,16 @@ st.markdown("""
         font-size: 12px;
         color: #38bdf8;
         margin-top: 4px;
+        font-weight: 500;
     }
     
     /* Cyber Terminal Box */
     .cyber-terminal {
-        background: #090d16;
-        border: 1px solid #1e293b;
+        background: #080c14;
+        border: 1px solid rgba(56, 189, 248, 0.2);
         border-radius: 14px;
         overflow: hidden;
-        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
         margin-top: 14px;
         margin-bottom: 20px;
     }
@@ -161,14 +189,14 @@ st.markdown("""
         height: 11px;
         border-radius: 50%;
     }
-    .dot-red { background: #f43f5e; box-shadow: 0 0 8px rgba(244, 63, 94, 0.4); }
-    .dot-yellow { background: #fbbf24; box-shadow: 0 0 8px rgba(251, 191, 36, 0.4); }
-    .dot-green { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+    .dot-red { background: #f43f5e; box-shadow: 0 0 8px rgba(244, 63, 94, 0.6); }
+    .dot-yellow { background: #fbbf24; box-shadow: 0 0 8px rgba(251, 191, 36, 0.6); }
+    .dot-green { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
     
     .terminal-screen {
-        padding: 20px;
+        padding: 22px;
         min-height: 240px;
-        max-height: 480px;
+        max-height: 500px;
         overflow-y: auto;
         font-family: 'JetBrains Mono', monospace;
         font-size: 14px;
@@ -182,17 +210,21 @@ st.markdown("""
         font-weight: 700;
     }
     
-    /* Concurrency Race Card */
+    /* Concurrency Racer Card */
     .racer-card {
-        background: rgba(15, 23, 42, 0.8);
+        background: rgba(15, 23, 42, 0.85);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 12px;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        transition: transform 0.2s ease;
+    }
+    .racer-card:hover {
+        border-color: rgba(56, 189, 248, 0.3);
     }
     
-    /* Memory Architecture Blocks */
+    /* Dynamic Memory Grid */
     .mem-grid {
         display: grid;
         grid-template-columns: repeat(16, 1fr);
@@ -201,7 +233,7 @@ st.markdown("""
     }
     
     .mem-block {
-        height: 26px;
+        height: 28px;
         border-radius: 4px;
         border: 1px solid rgba(255, 255, 255, 0.06);
         display: flex;
@@ -209,35 +241,36 @@ st.markdown("""
         justify-content: center;
         font-size: 10px;
         font-family: 'JetBrains Mono', monospace;
-        font-weight: 600;
-        transition: transform 0.15s ease;
+        font-weight: 700;
+        transition: all 0.2s ease;
     }
     .mem-block:hover {
-        transform: scale(1.15);
+        transform: scale(1.2);
         z-index: 10;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
     }
     
-    .block-used { background: #059669; color: #ecfdf5; box-shadow: 0 0 6px rgba(5, 150, 105, 0.4); }
-    .block-wasted { background: #e11d48; color: #fff1f2; box-shadow: 0 0 6px rgba(225, 29, 72, 0.4); }
+    .block-used { background: #059669; color: #ecfdf5; box-shadow: 0 0 8px rgba(5, 150, 105, 0.4); }
+    .block-wasted { background: #e11d48; color: #fff1f2; box-shadow: 0 0 8px rgba(225, 29, 72, 0.4); }
     .block-free { background: #1e293b; color: #64748b; }
     
-    /* Heatmap Tooltips */
+    /* Heatmap Tooltip */
     .token-fast {
         background: rgba(16, 185, 129, 0.25);
         border-bottom: 2px solid #10b981;
-        padding: 1px 3px;
+        padding: 1px 4px;
         border-radius: 3px;
     }
     .token-med {
         background: rgba(245, 158, 11, 0.25);
         border-bottom: 2px solid #f59e0b;
-        padding: 1px 3px;
+        padding: 1px 4px;
         border-radius: 3px;
     }
     .token-slow {
         background: rgba(239, 68, 68, 0.25);
         border-bottom: 2px solid #ef4444;
-        padding: 1px 3px;
+        padding: 1px 4px;
         border-radius: 3px;
     }
     
@@ -261,24 +294,18 @@ st.markdown("""
         color: #e2e8f0;
     }
     
-    /* Clean Tab Styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: transparent;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background: #111827;
-        border: 1px solid #1f293d;
-        border-radius: 10px;
-        padding: 10px 18px;
-        font-weight: 600;
-        font-size: 13px;
+    /* Pill Stats */
+    .pill-stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        font-size: 12px;
+        font-family: 'JetBrains Mono', monospace;
         color: #94a3b8;
-    }
-    .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%) !important;
-        border-color: #38bdf8 !important;
-        color: #f8fafc !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -374,30 +401,36 @@ def stop_server_bg():
 
 
 def render_speedometer_svg(speed_tps: float, max_scale: float = 60.0):
-    """Renders a sleek SVG Speedometer Gauge."""
+    """Renders a futuristic cyber dial gauge."""
     val = min(speed_tps, max_scale)
     pct = val / max_scale
     angle = -90 + (pct * 180)
     
     color = "#ef4444" if speed_tps < 15 else "#f59e0b" if speed_tps < 40 else "#10b981"
-    label = "Naive (Slow)" if speed_tps < 15 else "Moderate" if speed_tps < 40 else "High Speed (vLLM Tier)"
+    glow = "rgba(239, 68, 68, 0.4)" if speed_tps < 15 else "rgba(245, 158, 11, 0.4)" if speed_tps < 40 else "rgba(16, 185, 129, 0.4)"
+    label = "Naive (Slow)" if speed_tps < 15 else "Moderate" if speed_tps < 40 else "vLLM High-Throughput"
     
     svg = f"""
-    <div style="text-align: center; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px;">
-        <svg width="200" height="110" viewBox="0 0 200 110">
-            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1e293b" stroke-width="16" stroke-linecap="round"/>
-            <path d="M 20 100 A 80 80 0 0 1 65 35" fill="none" stroke="#ef4444" stroke-width="6" opacity="0.6"/>
-            <path d="M 65 35 A 80 80 0 0 1 135 35" fill="none" stroke="#f59e0b" stroke-width="6" opacity="0.6"/>
-            <path d="M 135 35 A 80 80 0 0 1 180 100" fill="none" stroke="#10b981" stroke-width="6" opacity="0.6"/>
+    <div style="text-align: center; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <svg width="220" height="120" viewBox="0 0 200 115">
+            <defs>
+                <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#ef4444" />
+                    <stop offset="50%" stop-color="#f59e0b" />
+                    <stop offset="100%" stop-color="#10b981" />
+                </linearGradient>
+            </defs>
+            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1e293b" stroke-width="18" stroke-linecap="round"/>
+            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" stroke-width="6" opacity="0.8"/>
             <g transform="translate(100, 100) rotate({angle})">
-                <line x1="0" y1="0" x2="0" y2="-72" stroke="{color}" stroke-width="4" stroke-linecap="round"/>
+                <line x1="0" y1="0" x2="0" y2="-72" stroke="{color}" stroke-width="4" stroke-linecap="round" style="filter: drop-shadow(0 0 6px {glow});"/>
                 <circle cx="0" cy="0" r="7" fill="{color}"/>
             </g>
         </svg>
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: {color}; margin-top:-10px;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; color: {color}; margin-top:-8px; text-shadow: 0 0 12px {glow};">
             {speed_tps:.1f} <span style="font-size: 13px; color: #94a3b8;">tok/s</span>
         </div>
-        <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">{label}</div>
+        <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px;">{label}</div>
     </div>
     """
     return svg
@@ -443,6 +476,32 @@ with col_srv2:
         time.sleep(1)
         st.rerun()
 
+# Sound FX Toggle
+st.sidebar.markdown("### 🔊 Sound & Haptics")
+enable_sound = st.sidebar.checkbox("Cyber Typewriter Audio FX", value=False)
+if enable_sound:
+    components.html("""
+    <script>
+    window.playCyberClick = function() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.03);
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.03);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.03);
+        } catch(e) {}
+    };
+    window.playCyberClick();
+    </script>
+    """, height=0)
+
 if os.path.exists(SERVER_LOG):
     with st.sidebar.expander("📄 View Server Logs"):
         with open(SERVER_LOG, "r") as f:
@@ -466,14 +525,14 @@ else:
 # 4. Top Header & Hardware HUD
 # -----------------------------------------------------------------------------
 st.markdown("""
-<div class="studio-header">
+<div class="cyber-header">
     <div>
         <div class="brand-title">⚡ NEURAL SERVE // HIGH-THROUGHPUT LLM LAB</div>
         <div class="brand-subtitle">Continuous Batching & PagedAttention vs Naive Serial Transformer Serving</div>
     </div>
     <div style="text-align: right;">
-        <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px;">
-            vLLM & BASELINE BENCHMARK HARNESS
+        <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; font-family:'JetBrains Mono'; letter-spacing: 0.5px;">
+            ENTERPRISE SERVING HARNESS
         </span>
     </div>
 </div>
@@ -506,7 +565,7 @@ st.markdown(f"""
 
 
 # -----------------------------------------------------------------------------
-# 5. Core Studio: 4 Powerhouse Workspaces (Clean & Impactful)
+# 5. Core Studio: 4 Powerhouse Workspaces
 # -----------------------------------------------------------------------------
 hub_playground, hub_arena, hub_arch, hub_analytics = st.tabs([
     "🚀 Live Prompt Studio",
@@ -524,6 +583,17 @@ with hub_playground:
     with mode_col:
         view_mode = st.radio("UI Experience:", ["💻 Cyber Terminal Mode", "💬 Modern Chat Studio"], horizontal=True)
 
+    with setting_col:
+        with st.expander("🎭 System Persona / Prompt Engineering Studio"):
+            system_presets = {
+                "Default Assistant": "You are a helpful and concise AI assistant.",
+                "Expert Python Architect": "You are a senior Python systems architect. Write ultra-clean, PEP-8 compliant code with detailed explanations.",
+                "AI Systems Researcher": "You are an AI compiler and GPU infrastructure engineer. Explain mechanical sympathy, memory bandwidth, and kernel optimizations.",
+                "Sarcastic Bot": "You are a witty, slightly sarcastic AI assistant with razor-sharp humor."
+            }
+            selected_persona = st.selectbox("Select System Persona:", list(system_presets.keys()))
+            custom_system_prompt = st.text_input("Active System Directive:", value=system_presets[selected_persona])
+
     col_input, col_config = st.columns([2.2, 1])
 
     with col_input:
@@ -534,7 +604,7 @@ with hub_playground:
             "🎭 AI Humor": "Tell me a short, witty joke about a deep learning engineer trying to deploy a 70B model on a 4GB GPU.",
             "✍️ Custom Prompt": ""
         }
-        selected_preset = st.selectbox("🎯 Prompt Presets", list(presets.keys()))
+        selected_preset = st.selectbox("🎯 Quick Prompt Templates", list(presets.keys()))
         prompt_text = presets[selected_preset] if selected_preset != "✍️ Custom Prompt" else ""
         user_prompt = st.text_area("Your Input Prompt:", value=prompt_text, height=110, placeholder="Type your prompt here...")
 
@@ -545,7 +615,7 @@ with hub_playground:
         force_tokens = st.checkbox("Enforce Exact Output (`ignore_eos`)", value=False)
         enable_heatmap = st.checkbox("🎨 Token Latency Heatmap Inspector", value=False)
 
-    col_run_btn, col_clear_btn = st.columns([1, 4])
+    col_run_btn, col_copy_btn = st.columns([1, 4])
     with col_run_btn:
         btn_stream = st.button("⚡ Dispatch Stream", type="primary", use_container_width=True)
 
@@ -566,6 +636,8 @@ with hub_playground:
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
+    if "last_generated_text" not in st.session_state:
+        st.session_state.last_generated_text = ""
 
     if view_mode == "💻 Cyber Terminal Mode":
         st.markdown("""
@@ -597,9 +669,10 @@ with hub_playground:
                     🤖 <b>{current_model or "Assistant"}:</b><br><br>
                     {item["response"]}
                     <br><br>
-                    <span style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid #38bdf8; padding:3px 8px; border-radius:12px; font-size:11px;">⚡ TTFT: {item["ttft"]:.0f} ms</span>
-                    <span style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:12px; font-size:11px;">🚀 {item["speed"]:.1f} tok/s</span>
-                    <span style="background:rgba(148,163,184,0.15); color:#cbd5e1; border:1px solid #475569; padding:3px 8px; border-radius:12px; font-size:11px;">⏱️ {item["total_time"]:.2f} s</span>
+                    <span class="pill-stat">⚡ TTFT: {item["ttft"]:.0f} ms</span>
+                    <span class="pill-stat">🚀 {item["speed"]:.1f} tok/s</span>
+                    <span class="pill-stat">⏱️ {item["total_time"]:.2f} s</span>
+                    <span class="pill-stat">🔢 {item["tokens"]} tokens</span>
                 </div>
                 ''', unsafe_allow_html=True)
         live_chat_placeholder = st.empty()
@@ -617,9 +690,12 @@ with hub_playground:
             token_timings = []
             prev_token_time = t0
 
+            # Prepend system prompt if customized
+            full_prompt = f"{custom_system_prompt}\n\nUser: {user_prompt}\nAssistant:" if custom_system_prompt else user_prompt
+
             req_body = {
                 "model": current_model or "Qwen/Qwen2.5-0.5B-Instruct",
-                "prompt": user_prompt,
+                "prompt": full_prompt,
                 "max_tokens": max_tokens,
                 "temperature": temperature,
                 "stream": True,
@@ -680,6 +756,7 @@ with hub_playground:
 
                 total_duration = time.perf_counter() - t0
                 tok_per_sec = (tokens_count / total_duration) if total_duration > 0 and tokens_count > 0 else 0
+                st.session_state.last_generated_text = generated_text
 
                 if enable_heatmap and token_timings:
                     heatmap_html = ""
@@ -691,6 +768,11 @@ with hub_playground:
                 else:
                     display_output = generated_text.replace("<", "&lt;").replace(">", "&gt;")
 
+                # Output formatting
+                word_count = len(generated_text.split())
+                char_count = len(generated_text)
+                read_sec = max(1, int(word_count / 3))
+
                 if view_mode == "💻 Cyber Terminal Mode":
                     terminal_screen_area.markdown(f"""
                         <div class="terminal-screen">
@@ -698,7 +780,7 @@ with hub_playground:
                             <br><br>
                             <span style="color:#f8fafc;">{display_output}</span>
                             <br><br>
-                            <span style="color:#10b981; font-size:12px;">[COMPLETED in {total_duration:.2f}s | TTFT: {(ttft*1000) if ttft else 0:.0f}ms | Speed: {tok_per_sec:.1f} tok/s]</span>
+                            <span style="color:#10b981; font-size:12px;">[COMPLETED in {total_duration:.2f}s | TTFT: {(ttft*1000) if ttft else 0:.0f}ms | Speed: {tok_per_sec:.1f} tok/s | Words: {word_count} | Chars: {char_count}]</span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -722,6 +804,17 @@ with hub_playground:
 
             except Exception as ex:
                 st.error(f"Generation error: {ex}")
+
+    # Actions: Copy / Download response
+    if st.session_state.last_generated_text:
+        col_act1, col_act2, col_act3 = st.columns([1, 1, 3])
+        with col_act1:
+            st.download_button("💾 Save Text", st.session_state.last_generated_text, file_name="llm_output.txt")
+        with col_act2:
+            if st.button("🗑️ Clear Chat / Screen"):
+                st.session_state.chat_history = []
+                st.session_state.last_generated_text = ""
+                st.rerun()
 
 
 # =============================================================================
