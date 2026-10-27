@@ -307,6 +307,132 @@ st.markdown("""
         font-family: 'JetBrains Mono', monospace;
         color: #94a3b8;
     }
+    
+    /* ELIMINATE STREAMLIT DEFAULT RED ACCENTS & APPLY MODERN PALETTE */
+    div[data-baseweb="tab-highlight"] {
+        background-color: #38bdf8 !important;
+        background: linear-gradient(90deg, #38bdf8, #818cf8) !important;
+        height: 3px !important;
+        border-radius: 3px !important;
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.9) !important;
+    }
+    
+    div[data-baseweb="tab"] {
+        font-weight: 600 !important;
+    }
+    
+    div[data-baseweb="tab"][aria-selected="true"] {
+        color: #38bdf8 !important;
+    }
+
+    /* Sliders - Thumb, Values, and Track */
+    div[data-testid="stSlider"] [data-testid="stThumbValue"] {
+        color: #38bdf8 !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+    }
+
+    div[data-testid="stSlider"] div[role="slider"] {
+        background-color: #38bdf8 !important;
+        border: 2px solid #0f172a !important;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.9) !important;
+    }
+
+    div[data-testid="stSlider"] div[data-baseweb="slider"] > div > div:first-child {
+        background: linear-gradient(90deg, #0284c7, #38bdf8) !important;
+        background-color: #38bdf8 !important;
+    }
+
+    div[data-testid="stSlider"] div[style*="rgb(255, 75, 75)"],
+    div[data-testid="stSlider"] div[style*="#ff4b4b"] {
+        background: #38bdf8 !important;
+        background-color: #38bdf8 !important;
+    }
+
+    /* Segmented Controls & Pills */
+    div[data-testid="stSegmentedControl"] {
+        background: rgba(15, 23, 42, 0.7) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        padding: 4px !important;
+    }
+    div[data-testid="stSegmentedControl"] button {
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: 12.5px !important;
+        transition: all 0.2s ease !important;
+    }
+    div[data-testid="stSegmentedControl"] button[aria-selected="true"] {
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(129, 140, 248, 0.25) 100%) !important;
+        border: 1px solid #38bdf8 !important;
+        color: #38bdf8 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important;
+    }
+
+    div[data-testid="stPills"] button {
+        border-radius: 20px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: rgba(15, 23, 42, 0.6) !important;
+        color: #94a3b8 !important;
+        transition: all 0.2s ease !important;
+    }
+    div[data-testid="stPills"] button:hover {
+        border-color: rgba(56, 189, 248, 0.5) !important;
+        color: #e2e8f0 !important;
+    }
+    div[data-testid="stPills"] button[aria-selected="true"] {
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
+        border: 1px solid #38bdf8 !important;
+        color: #38bdf8 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.35) !important;
+    }
+
+    /* Popover */
+    div[data-testid="stPopover"] button {
+        border: 1px solid rgba(56, 189, 248, 0.35) !important;
+        background: rgba(15, 23, 42, 0.8) !important;
+        color: #38bdf8 !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+    div[data-testid="stPopover"] button:hover {
+        border-color: #38bdf8 !important;
+        background: rgba(56, 189, 248, 0.12) !important;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important;
+    }
+
+    /* Checkboxes */
+    div[data-testid="stCheckbox"] input:checked + div {
+        background-color: #38bdf8 !important;
+        border-color: #38bdf8 !important;
+    }
+
+    /* Radio buttons fallback */
+    div[data-testid="stRadio"] div[aria-checked="true"] > div:first-child {
+        background-color: #38bdf8 !important;
+        border-color: #38bdf8 !important;
+    }
+
+    /* Primary buttons */
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #7c3aed 100%) !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4) !important;
+        transition: all 0.2s ease !important;
+    }
+    button[kind="primary"]:hover {
+        box-shadow: 0 6px 24px rgba(56, 189, 248, 0.6) !important;
+        transform: translateY(-1px) !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -579,22 +705,44 @@ hub_playground, hub_arena, hub_arch, hub_analytics = st.tabs([
 # HUB 1: LIVE PROMPT & CHAT STUDIO
 # =============================================================================
 with hub_playground:
-    mode_col, setting_col = st.columns([1, 2])
-    with mode_col:
-        view_mode = st.radio("UI Experience:", ["💻 Cyber Terminal Mode", "💬 Modern Chat Studio"], horizontal=True)
+    # Sleek Unified Toolbar Row
+    toolbar_col1, toolbar_col2, toolbar_col3 = st.columns([1.6, 1.4, 0.9], vertical_alignment="center")
+    with toolbar_col1:
+        st.markdown("<div style='font-size:11px; font-weight:700; color:#64748b; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:5px;'>🖥️ UI VIEW MODE</div>", unsafe_allow_html=True)
+        view_mode = st.segmented_control(
+            "UI Mode",
+            ["💻 Cyber Terminal Mode", "💬 Modern Chat Studio"],
+            default="💻 Cyber Terminal Mode",
+            label_visibility="collapsed"
+        )
+        if not view_mode:
+            view_mode = "💻 Cyber Terminal Mode"
 
-    with setting_col:
-        with st.expander("🎭 System Persona / Prompt Engineering Studio"):
-            system_presets = {
-                "Default Assistant": "You are a helpful and concise AI assistant.",
-                "Expert Python Architect": "You are a senior Python systems architect. Write ultra-clean, PEP-8 compliant code with detailed explanations.",
-                "AI Systems Researcher": "You are an AI compiler and GPU infrastructure engineer. Explain mechanical sympathy, memory bandwidth, and kernel optimizations.",
-                "Sarcastic Bot": "You are a witty, slightly sarcastic AI assistant with razor-sharp humor."
-            }
-            selected_persona = st.selectbox("Select System Persona:", list(system_presets.keys()))
-            custom_system_prompt = st.text_input("Active System Directive:", value=system_presets[selected_persona])
+    with toolbar_col2:
+        st.markdown("<div style='font-size:11px; font-weight:700; color:#64748b; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:5px;'>🎭 SYSTEM PERSONA</div>", unsafe_allow_html=True)
+        system_presets = {
+            "🤖 Default Assistant": "You are a helpful and concise AI assistant.",
+            "🐍 Python Architect": "You are a senior Python systems architect. Write ultra-clean, PEP-8 compliant code with detailed explanations.",
+            "🧠 AI Systems Researcher": "You are an AI compiler and GPU infrastructure engineer. Explain mechanical sympathy, memory bandwidth, and kernel optimizations.",
+            "🎭 Sarcastic Bot": "You are a witty, slightly sarcastic AI assistant with razor-sharp humor."
+        }
+        selected_persona = st.selectbox("Select System Persona", list(system_presets.keys()), label_visibility="collapsed")
 
-    col_input, col_config = st.columns([2.2, 1])
+    with toolbar_col3:
+        st.markdown("<div style='font-size:11px; font-weight:700; color:#64748b; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:5px;'>DIRECTIVES</div>", unsafe_allow_html=True)
+        with st.popover("⚙️ Directives", use_container_width=True):
+            st.markdown("<div style='font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:8px;'>🎭 System Persona Directives</div>", unsafe_allow_html=True)
+            custom_system_prompt = st.text_area(
+                "System Instruction Directive:",
+                value=system_presets[selected_persona],
+                height=130,
+                help="Sent before user prompts to condition LLM persona"
+            )
+            st.caption("Active directive injected into LLM context window.")
+
+    st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
+
+    col_input, col_config = st.columns([2.3, 1])
 
     with col_input:
         presets = {
@@ -604,20 +752,28 @@ with hub_playground:
             "🎭 AI Humor": "Tell me a short, witty joke about a deep learning engineer trying to deploy a 70B model on a 4GB GPU.",
             "✍️ Custom Prompt": ""
         }
-        selected_preset = st.selectbox("🎯 Quick Prompt Templates", list(presets.keys()))
+        st.markdown("<div style='font-size:11px; font-weight:700; color:#64748b; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px;'>🎯 QUICK PROMPTS & BENCHMARKS</div>", unsafe_allow_html=True)
+        selected_preset = st.pills(
+            "Quick Prompt Templates",
+            list(presets.keys()),
+            default="🚀 Quick Matrix Multiplication",
+            label_visibility="collapsed"
+        )
+        if not selected_preset:
+            selected_preset = "🚀 Quick Matrix Multiplication"
         prompt_text = presets[selected_preset] if selected_preset != "✍️ Custom Prompt" else ""
-        user_prompt = st.text_area("Your Input Prompt:", value=prompt_text, height=110, placeholder="Type your prompt here...")
+        user_prompt = st.text_area("Your Input Prompt:", value=prompt_text, height=115, placeholder="Type your prompt here...")
 
     with col_config:
-        st.markdown("**Generation Controls**")
+        st.markdown("<div style='font-size:11px; font-weight:700; color:#64748b; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:8px;'>⚡ GENERATION CONTROLS</div>", unsafe_allow_html=True)
         max_tokens = st.slider("Max Output Tokens", min_value=16, max_value=512, value=128, step=16)
         temperature = st.slider("Sampling Temperature", min_value=0.0, max_value=1.0, value=0.7, step=0.05)
-        force_tokens = st.checkbox("Enforce Exact Output (`ignore_eos`)", value=False)
-        enable_heatmap = st.checkbox("🎨 Token Latency Heatmap Inspector", value=False)
+        force_tokens = st.checkbox("Exact Output (`ignore_eos`)", value=False)
+        enable_heatmap = st.checkbox("🎨 Latency Heatmap Inspector", value=False)
 
-    col_run_btn, col_copy_btn = st.columns([1, 4])
+    col_run_btn, col_copy_btn = st.columns([1.2, 3.8])
     with col_run_btn:
-        btn_stream = st.button("⚡ Dispatch Stream", type="primary", use_container_width=True)
+        btn_stream = st.button("⚡ Execute & Stream", type="primary", use_container_width=True)
 
     # Telemetry and Speedometer Row
     speed_col, stat1_col, stat2_col, stat3_col, stat4_col = st.columns([1.2, 1, 1, 1, 1])
