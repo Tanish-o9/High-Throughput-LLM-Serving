@@ -639,6 +639,11 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+vram_pct_val = (gpu_stats['used_mb'] / gpu_stats['total_mb'] * 100) if gpu_stats['total_mb'] > 0 else 0.0
+cuda_sub = "CUDA 12.4 Enabled" if gpu_stats.get('ok') else "Host CPU / Cloud Node"
+vram_val_display = f"{gpu_stats['used_mb']} <span style=\"font-size: 14px; color:#94a3b8;\">/ {gpu_stats['total_mb']} MB</span>" if gpu_stats['total_mb'] > 0 else "<span style=\"font-size: 15px; color:#94a3b8;\">System RAM</span>"
+vram_sub_display = f"{vram_pct_val:.1f}% VRAM Occupied" if gpu_stats['total_mb'] > 0 else "Cloud Instance (No GPU)"
+
 st.markdown(f"""
 <div class="hud-grid">
     <div class="hud-card">
@@ -649,12 +654,12 @@ st.markdown(f"""
     <div class="hud-card">
         <div class="hud-label">Compute Device</div>
         <div class="hud-value" style="font-size: 18px;">{gpu_stats['name'].replace('NVIDIA GeForce ', '')}</div>
-        <div class="hud-sub">CUDA 12.4 Enabled</div>
+        <div class="hud-sub">{cuda_sub}</div>
     </div>
     <div class="hud-card">
         <div class="hud-label">VRAM Allocation</div>
-        <div class="hud-value">{gpu_stats['used_mb']} <span style="font-size: 14px; color:#94a3b8;">/ {gpu_stats['total_mb']} MB</span></div>
-        <div class="hud-sub">{(gpu_stats['used_mb']/gpu_stats['total_mb']*100):.1f}% VRAM Occupied</div>
+        <div class="hud-value">{vram_val_display}</div>
+        <div class="hud-sub">{vram_sub_display}</div>
     </div>
     <div class="hud-card">
         <div class="hud-label">Active Model</div>
@@ -663,6 +668,7 @@ st.markdown(f"""
     </div>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 hub_playground, hub_arena, hub_arch, hub_analytics = st.tabs([
