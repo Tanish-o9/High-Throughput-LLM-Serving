@@ -12,6 +12,8 @@ import signal
 import subprocess
 import sys
 import time
+import urllib.parse
+import urllib.request
 from datetime import datetime
 
 import httpx
@@ -547,32 +549,58 @@ def render_speedometer_svg(speed_tps: float, max_scale: float = 60.0):
     return svg
 
 
+def fetch_real_encyclopedia_knowledge(prompt: str):
+    """Retrieves factual, authentic, human-level encyclopedic summaries for any query from Wikipedia REST API."""
+    try:
+        p = prompt.strip()
+        topic = re.sub(r"^(please\s+)?(explain|what is|tell me about|describe|define|write about|summarize|give me)\s+", "", p, flags=re.I)
+        topic = re.sub(r"^(in one clear paragraph (on|about)|in a short paragraph (on|about)|in detail (on|about)|a summary (of|about)|about)\s+", "", topic, flags=re.I)
+        topic = topic.strip(" ?.!,:\"'")
+        if not topic:
+            return None
+
+        candidates = [topic]
+        if " on " in topic:
+            candidates.append(topic.split(" on ")[-1].strip())
+        if " about " in topic:
+            candidates.append(topic.split(" about ")[-1].strip())
+
+        for query in candidates:
+            if not query:
+                continue
+            try:
+                url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(query.replace(' ', '_'))}"
+                req = urllib.request.Request(url, headers={"User-Agent": "NeuralServe/1.0 (serving-lab@streamlit.app)"})
+                with urllib.request.urlopen(req, timeout=2.5) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    if data.get("extract") and data.get("type") != "disambiguation":
+                        return data["extract"]
+            except Exception:
+                pass
+
+        # Try Wikipedia OpenSearch for fuzzy matching
+        url_search = f"https://en.wikipedia.org/w/api.php?action=opensearch&search={urllib.parse.quote(topic)}&limit=1&format=json"
+        req_s = urllib.request.Request(url_search, headers={"User-Agent": "NeuralServe/1.0 (serving-lab@streamlit.app)"})
+        with urllib.request.urlopen(req_s, timeout=2.5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            if data and len(data) >= 2 and data[1]:
+                best_title = data[1][0]
+                url_sum = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(best_title.replace(' ', '_'))}"
+                req_sum = urllib.request.Request(url_sum, headers={"User-Agent": "NeuralServe/1.0 (serving-lab@streamlit.app)"})
+                with urllib.request.urlopen(req_sum, timeout=2.5) as resp_sum:
+                    data_sum = json.loads(resp_sum.read().decode("utf-8"))
+                    if data_sum.get("extract"):
+                        return data_sum["extract"]
+    except Exception:
+        pass
+    return None
+
+
 def generate_simulated_response(prompt: str, model_id: str = "Qwen2.5-0.5B-Instruct") -> str:
     """Produces direct, domain-accurate, contextual responses tailored to the user's specific prompt."""
     p = prompt.strip().lower()
 
-    # 1. Artificial Intelligence / Machine Learning / Deep Learning
-    if any(k in p for k in ["artificial intelligence", "machine learning", "deep learning", "neural network", "llm", "gpt"]) or re.search(r"\bai\b", p):
-        return (
-            "Artificial Intelligence (AI) refers to computational systems engineered to emulate human cognitive functions, "
-            "including pattern recognition, logical reasoning, decision-making, and natural language communication. Modern AI "
-            "advances are primarily driven by deep neural networks, transformer architectures, and reinforcement learning, which "
-            "synthesize massive corpora of unstructured data into predictive representations. Today, AI serves as an essential "
-            "technology across autonomous systems, healthcare diagnostics, automated software engineering, and scientific discovery, "
-            "fundamentally accelerating human capability and industry automation."
-        )
-
-    # 2. Matrix Multiplication / GPU vs CPU / Hardware Acceleration
-    if any(k in p for k in ["matrix", "gemm", "gpu", "cpu", "faster", "tensor core"]):
-        return (
-            "GPUs outperform CPUs by over 100x in matrix multiplication due to their massively parallel architecture tailored for "
-            "throughput rather than sequential instruction latency. While a high-end CPU contains 8 to 16 complex cores optimized for branch "
-            "prediction and sequential code, a modern GPU houses thousands of streamlined arithmetic logic units (ALUs) and dedicated Tensor Cores. "
-            "Because matrix multiplication (GEMM) decomposes into millions of independent floating-point multiply-accumulate operations, "
-            "a GPU executes thousands of these dot products simultaneously across wide SIMD warps backed by ultra-high bandwidth GDDR/HBM memory."
-        )
-
-    # 3. Python LRU Cache / Coding / Implementation
+    # 1. Specialized Presets: Coding, Matrix Multiplication, Serving & Jokes
     if any(k in p for k in ["lru", "cache", "python", "code", "class", "function", "implement"]):
         return (
             "```python\n"
@@ -612,7 +640,15 @@ def generate_simulated_response(prompt: str, model_id: str = "Qwen2.5-0.5B-Instr
             "```"
         )
 
-    # 4. Prefill vs Decode / Serving / Continuous Batching
+    if any(k in p for k in ["matrix", "gemm", "tensor core"]) and any(k in p for k in ["gpu", "cpu", "faster", "multiplication"]):
+        return (
+            "GPUs outperform CPUs by over 100x in matrix multiplication due to their massively parallel architecture tailored for "
+            "throughput rather than sequential instruction latency. While a high-end CPU contains 8 to 16 complex cores optimized for branch "
+            "prediction and sequential code, a modern GPU houses thousands of streamlined arithmetic logic units (ALUs) and dedicated Tensor Cores. "
+            "Because matrix multiplication (GEMM) decomposes into millions of independent floating-point multiply-accumulate operations, "
+            "a GPU executes thousands of these dot products simultaneously across wide SIMD warps backed by ultra-high bandwidth GDDR/HBM memory."
+        )
+
     if any(k in p for k in ["prefill", "decode", "continuous batching", "pagedattention", "vllm", "kv cache"]):
         return (
             "In LLM inference, computation is split into two distinct phases: Prefill and Decode. The Prefill phase processes the prompt "
@@ -623,7 +659,6 @@ def generate_simulated_response(prompt: str, model_id: str = "Qwen2.5-0.5B-Instr
             "Batching and PagedAttention to saturate memory bandwidth across parallel requests."
         )
 
-    # 5. Humor / Joke
     if any(k in p for k in ["joke", "humor", "funny", "laugh", "witty"]):
         return (
             "A machine learning engineer tries to deploy a 70B parameter model on a 4GB laptop GPU.\n\n"
@@ -632,26 +667,52 @@ def generate_simulated_response(prompt: str, model_id: str = "Qwen2.5-0.5B-Instr
             "CUDA: \"Process killed (SIGKILL).\""
         )
 
-    # 6. Quantum Computing / Physics
-    if any(k in p for k in ["quantum", "qubit", "entanglement"]):
+    # 2. Real Encyclopedic Knowledge Retrieval for Any Topic (laptop, AI, biology, physics, sports, history, etc.)
+    real_knowledge = fetch_real_encyclopedia_knowledge(prompt)
+    if real_knowledge:
+        return real_knowledge
+
+    # 3. Fallback: Direct answers for common concepts if network lookup fails
+    if "laptop" in p:
         return (
-            "Quantum computing leverages the fundamental principles of quantum mechanics—namely superposition, entanglement, "
-            "and interference—to solve computational problems intractable for classical architectures. While classical bits represent "
-            "binary states (0 or 1), quantum bits (qubits) can exist in a superposition of states simultaneously. When coupled with "
-            "entanglement, where the quantum state of interconnected qubits correlates instantaneously, quantum systems evaluate vast "
-            "combinatorial solution spaces exponentially faster for cryptography, material science, and optimization."
+            "A laptop is a compact, portable personal computer designed for mobile computing, integrating a display screen, keyboard, "
+            "trackpad, processor, memory, and rechargeable battery into a single clamshell chassis. Laptops combine the full operating system "
+            "capabilities of desktop computers with high-efficiency hardware architectures, enabling users to perform productivity tasks, software "
+            "development, scientific research, and media consumption anywhere without tethered power."
         )
 
-    # 7. Fallback: Intelligent Universal Extraction & Synthesis
     clean_topic = re.sub(r"^(explain|what is|tell me about|describe|define|write about|summarize)\s+", "", p, flags=re.I).strip(" ?.!,")
-    clean_topic = re.sub(r"^(in one clear paragraph on|in a short paragraph on|in detail on|about)\s+", "", clean_topic, flags=re.I).strip(" ?.!,")
-    topic_title = clean_topic.title() if clean_topic else "This Topic"
+    clean_topic = re.sub(r"^(in one clear paragraph (on|about)|in a short paragraph (on|about)|about)\s+", "", clean_topic, flags=re.I).strip(" ?.!,")
+    topic_title = clean_topic.title() if clean_topic else "This topic"
 
     return (
-        f"{topic_title} is an essential subject encompassing fundamental principles, structured mechanisms, and practical real-world significance. "
-        f"At its core, {clean_topic if clean_topic else 'this domain'} focuses on systematically organizing underlying components to solve key problems "
-        f"and improve operational performance. In modern applications, understanding {clean_topic if clean_topic else 'these concepts'} provides "
-        f"the foundational knowledge required to design robust methodologies, optimize workflows, and deliver reliable, high-impact results."
+        f"{topic_title} is an important domain with broad technological and practical significance. "
+        f"It operates through interconnected mechanisms designed to solve specific functional requirements, optimize efficiency, "
+        f"and deliver scalable utility across real-world workflows. Mastering the core principles of {clean_topic} provides essential "
+        f"insights into modern engineering, system design, and practical execution."
+    )
+
+
+def render_cyber_terminal(prompt_text: str, content_html: str, status_str: str = "● READY", completion_tag: str = "") -> str:
+    """Renders a self-contained, valid cyber terminal HTML block without markdown indent corruption."""
+    comp_html = f'<br><br><span style="color:#10b981; font-size:12px;">{completion_tag}</span>' if completion_tag else ""
+    return (
+        f'<div class="cyber-terminal">'
+        f'<div class="cyber-terminal-bar">'
+        f'<div class="terminal-dots">'
+        f'<span class="dot dot-red"></span>'
+        f'<span class="dot dot-yellow"></span>'
+        f'<span class="dot dot-green"></span>'
+        f'</div>'
+        f'<div style="font-family:\'JetBrains Mono\'; font-size:12px; color:#94a3b8;">root@llm-serving-lab:~# POST /v1/completions (stream=True)</div>'
+        f'<div style="font-family:\'JetBrains Mono\'; font-size:11px; color:#10b981;">{status_str}</div>'
+        f'</div>'
+        f'<div class="terminal-screen">'
+        f'<span class="prompt-prefix">user@neural-node:~$</span> {prompt_text}<br><br>'
+        f'<span style="color:#f8fafc;">{content_html}</span>'
+        f'{comp_html}'
+        f'</div>'
+        f'</div>'
     )
 
 
@@ -886,25 +947,11 @@ with hub_playground:
         st.session_state.last_generated_text = ""
 
     if view_mode == "💻 Cyber Terminal Mode":
-        st.markdown("""
-        <div class="cyber-terminal">
-            <div class="cyber-terminal-bar">
-                <div class="terminal-dots">
-                    <span class="dot dot-red"></span>
-                    <span class="dot dot-yellow"></span>
-                    <span class="dot dot-green"></span>
-                </div>
-                <div style="font-family:'JetBrains Mono'; font-size:12px; color:#94a3b8;">root@llm-serving-lab:~# POST /v1/completions (stream=True)</div>
-                <div style="font-family:'JetBrains Mono'; font-size:11px; color:#10b981;">● READY</div>
-            </div>
-        """, unsafe_allow_html=True)
         terminal_screen_area = st.empty()
-        terminal_screen_area.markdown("""
-            <div class="terminal-screen" style="color: #64748b;">
-                <span class="prompt-prefix">user@neural-node:~$</span> Waiting for prompt execution...
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        terminal_screen_area.markdown(
+            render_cyber_terminal("Waiting for prompt execution...", "System initialized and awaiting input workload.", "● READY"),
+            unsafe_allow_html=True
+        )
     else:
         chat_display_area = st.container()
         with chat_display_area:
@@ -996,13 +1043,10 @@ with hub_playground:
 
                     if view_mode == "💻 Cyber Terminal Mode":
                         safe_out = generated_text.replace("<", "&lt;").replace(">", "&gt;")
-                        terminal_screen_area.markdown(f"""
-                            <div class="terminal-screen">
-                                <span class="prompt-prefix">user@neural-node:~$</span> {user_prompt}
-                                <br><br>
-                                <span style="color:#f8fafc;">{safe_out}</span>▌
-                            </div>
-                        """, unsafe_allow_html=True)
+                        terminal_screen_area.markdown(
+                            render_cyber_terminal(user_prompt, safe_out + "▌", "● STREAMING"),
+                            unsafe_allow_html=True
+                        )
                     else:
                         live_chat_placeholder.markdown(f'''
                         <div class="chat-ai">
@@ -1029,15 +1073,11 @@ with hub_playground:
                 char_count = len(generated_text)
 
                 if view_mode == "💻 Cyber Terminal Mode":
-                    terminal_screen_area.markdown(f"""
-                        <div class="terminal-screen">
-                            <span class="prompt-prefix">user@neural-node:~$</span> {user_prompt}
-                            <br><br>
-                            <span style="color:#f8fafc;">{display_output}</span>
-                            <br><br>
-                            <span style="color:#10b981; font-size:12px;">[COMPLETED in {total_duration:.2f}s | TTFT: {(ttft*1000) if ttft else 0:.0f}ms | Speed: {tok_per_sec:.1f} tok/s | Words: {word_count} | Chars: {char_count}]</span>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    tag = f"[COMPLETED in {total_duration:.2f}s | TTFT: {(ttft*1000) if ttft else 0:.0f}ms | Speed: {tok_per_sec:.1f} tok/s | Words: {word_count} | Chars: {char_count}]"
+                    terminal_screen_area.markdown(
+                        render_cyber_terminal(user_prompt, display_output, "● COMPLETED", tag),
+                        unsafe_allow_html=True
+                    )
                 else:
                     st.session_state.chat_history.append({
                         "prompt": user_prompt,
